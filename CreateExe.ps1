@@ -7,7 +7,7 @@
 #
 #    ./CreateExe <NoMans>
 #
-#  Creates NomansSky.exe that can be  used launch No Man's Sky
+#  Creates NomansSky.exe that can be used launch No Man's Sky
 #  The executable can then be used in LGS to detect if NMS is running
 #  
 ## Rquirements
@@ -19,26 +19,58 @@
 #  Enable running PS scripts asneeded
 #  Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 
-$search = $args
-$package = Get-AppxPackage *$search*
-if (!$package)
+
+param([string]$Search, [switch]$NoAutoclose, [switch]$NoExe, [Double]$InitWait = 30.0, [Double]$Wait = 1.0)
+
+$oPackage = Get-AppxPackage *$Search*
+
+if (!$oPackage)
 {
-    Write-Output "Could not find package for $search"
+    Write-Output "Could not find package for $Search"
     Exit
 }
-$sFile = (Get-ChildItem -Filter "appxmanifest.xml" -Recurse  $package.InstallLocation).FullName
+$oManifest = Get-AppPackageManifest  $oPackage
+$sFile = (Get-ChildItem -Filter "appxmanifest.xml" -Recurse  $oPackage.InstallLocation).FullName
 
-[xml]$xml = Get-Content $sFile
-$appId = $xml.Package.Applications.Application.Id
-Write-Output $package.Name
+$appId = $oManifest.Package.Applications.Application.id
+$sDisplayName = $oManifest.Package.Applications.Application.VisualElements.DisplayName
 
-$sName = $package.name.Split(".")[1].ToString().split("-")[0].toString()
+$FamilyName = $oPackage.PackageFamilyName
+
+$sCommand = "explorer.exe shell:appsFolder\$FamilyName!$appId"
+$sName = $oPackage.name.Split(".")[1].ToString().split("-")[0].toString()
 $sScript = $sName+".ps1"
 $sExe = $sName+".exe"
 
+Write-Output "Creating launcher for "+$sDisplayName
+Out-File -FilePath $sScript -InputObject @"
+Write-Output "Launching  $sDisplayname"
+$sCommand
+"@
 
-Out-File -FilePath $sScript -InputObject "explorer.exe shell:appsFolder\$package.PackageFamilyName!$appId"
-Out-File -FilePath $sScript -Append -InputObject @"
+if (!$NoAutoclose)
+{
+    Out-File -FilePath $sScript -Append -InputObject @"
+
+param([Double]`$InitWait = $InitWait, [Double]`$Wait=$Wait)
+Start-Sleep $Wait
+[bool]`$bCheck = `$true
+do
+{
+    `$running = Get-Process | Where-Object { $_.MainWindowTitle -like "$sDisplayname"}
+    Start-Sleep 1
+    if ((`$bCheck)  -and (`$running))
+    {
+        Write-Output "$sDisplayname detected"
+        `$bCheck = `$false
+    }
+    
+}
+while (`$running)
+
+"@
+} else {
+    Out-File -FilePath $sScript -Append -InputObject @"
 Write-Host -NoNewLine 'Press space after game exit...';
 do 
 {
@@ -46,9 +78,18 @@ do
     `$value = `$key.KeyChar
 }
 while (`$value -notmatch ' ')
-"@
+"@   
+}
 
-Invoke-ps2exe .\$sScript .\$sExe
+Out-File -FilePath $sScript -Append -InputObject "Write-Output 'EXiting...'"
 
-Write-Output "Created $sExe with"
-Write-Output "explorer.exe shell:appsFolder\$package.PackageFamilyName!$appId"
+
+if (!$NoExe)
+{
+    Invoke-ps2exe .\$sScript .\$sExe
+
+    Write-Output "Created $sExe with"
+} else {
+    Write-Output "Would Create $sExe with"
+}
+Write-Output "$sCommand"
