@@ -26,7 +26,15 @@ $oPackage = Get-AppxPackage *$Search*
 
 if (!$oPackage)
 {
-    Write-Output "Could not find package for $Search"
+    Write-Host -ForegroundColor Red "Could not find package for '$Search'"
+    Exit
+} elseif ($oPackage -is [array])
+{
+    Write-Host -ForegroundColor Red "Multiple packages found for search '$Search'"
+    foreach ($p in $oPackage)
+    {
+        Write-Host -ForegroundColor Red $p.name
+    }
     Exit
 }
 $oManifest = Get-AppPackageManifest  $oPackage
