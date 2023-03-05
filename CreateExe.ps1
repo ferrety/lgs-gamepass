@@ -1,19 +1,19 @@
 # Powershell script to create executable launcher for gamepass games, e.g., for LGS
-#  
+#
 ## Usage:
 #    ./CreateExe.ps1 <part of game name>
-# 
-## Example 
+#
+## Example
 #
 #    ./CreateExe <NoMans>
 #
 #  Creates NomansSky.exe that can be used launch No Man's Sky
 #  The executable can then be used in LGS to detect if NMS is running
-#  
+#
 ## Rquirements
-# 
+#
 #  [PS2EXE](https://github.com/MScholtes/PS2EXE)
-#  Install with 
+#  Install with
 #  Install-Module ps2exe
 #
 #  Enable running PS scripts asneeded
@@ -31,10 +31,12 @@ if (!$oPackage)
 } elseif ($oPackage -is [array])
 {
     Write-Host -ForegroundColor Red "Multiple packages found for search '$Search'"
+    $a = @()
     foreach ($p in $oPackage)
     {
-        Write-Host -ForegroundColor Red $p.name
+        $a+=[PSCustomObject]@{ "Package Name" = $p.name; "Display Name" = (Get-AppPackageManifest  $p).Package.Properties.DisplayName}
     }
+    $a |Format-Table -AutoSize |Out-String
     Exit
 }
 $oManifest = Get-AppPackageManifest  $oPackage
