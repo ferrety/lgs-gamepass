@@ -24,9 +24,23 @@ param([string]$Search, [switch]$NoAutoclose, [switch]$NoExe, [Double]$InitWait =
 
 $oPackage = Get-AppxPackage *$Search*
 
+# The publisher name is typically included with the install location
+if (!$oPackage -and !$oPackage -is [array]){
+    $oPackage = Get-AppxPackage  -ErrorAction SilentlyContinue  | Where-object { $_.InstallLocation  -like "*$Search*"}
+}
+
+# Finally try with publisher displayname
+# TODO: Use Package.Publisher, needs converting name to publisher id
+if (!$oPackage -and !$oPackage -is [array]){
+    $p =Get-AppxPackage  -ErrorAction SilentlyContinue  | Get-AppxPackageManifest -ErrorAction SilentlyContinue   | Where-object { $_.Package.Properties.PublisherDisplayName -like "Focus*"}
+    $oPackage=Get-AppxPackage -Name $p.Package.Identity.Name
+}
+
+
 if (!$oPackage)
 {
     Write-Host -ForegroundColor Red "Could not find package for '$Search'"
+    Write-Output "You can try with part of publisher name or install directory"
     Exit
 } elseif ($oPackage -is [array])
 {
@@ -40,19 +54,26 @@ if (!$oPackage)
     Exit
 }
 $oManifest = Get-AppPackageManifest  $oPackage
-$sFile = (Get-ChildItem -Filter "appxmanifest.xml" -Recurse  $oPackage.InstallLocation).FullName
 
 $appId = $oManifest.Package.Applications.Application.id
-$sDisplayName = $oManifest.Package.Applications.Application.VisualElements.DisplayName
+$sDisplayName = $oManifest.Package.Properties.DisplayName
 
 $FamilyName = $oPackage.PackageFamilyName
 
 $sCommand = "explorer.exe shell:appsFolder\$FamilyName!$appId"
-$sName = $oPackage.name.Split(".")[1].ToString().split("-")[0].toString()
+$sName = $sDisplayName.replace(" ", "")
 $sScript = $sName+".ps1"
 $sExe = $sName+".exe"
 
-Write-Output "Creating launcher for "+$sDisplayName
+Write-Output "Creating launcher for '$sDisplayName'"
+do
+{
+$continue = Read-Host "Continue? (Y/n)"
+} while  (!"YNny".contains("$continue"))
+if ($continue -eq "n") {
+    exit
+}
+
 Out-File -FilePath $sScript -InputObject @"
 param([Double]`$InitWait = $InitWait, [Double]`$Wait=$Wait)
 Write-Output "Launching  $sDisplayname"
@@ -94,13 +115,12 @@ while (`$value -notmatch ' ')
 
 Out-File -FilePath $sScript -Append -InputObject "Write-Output 'Exiting...'"
 
-
 if (!$NoExe)
 {
     Invoke-ps2exe .\$sScript .\$sExe
 
-    Write-Output "Created $sExe with"
+    Write-Output "Created $sExe with command"
 } else {
-    Write-Output "Would Create $sExe with"
+    Write-Output "Would Create $sExe with command"
 }
 Write-Output "$sCommand"
