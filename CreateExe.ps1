@@ -52,6 +52,7 @@ $sExe = $sName+".exe"
 
 Write-Output "Creating launcher for "+$sDisplayName
 Out-File -FilePath $sScript -InputObject @"
+param([Double]`$InitWait = $InitWait, [Double]`$Wait=$Wait)
 Write-Output "Launching  $sDisplayname"
 $sCommand
 "@
@@ -60,19 +61,19 @@ if (!$NoAutoclose)
 {
     Out-File -FilePath $sScript -Append -InputObject @"
 
-param([Double]`$InitWait = $InitWait, [Double]`$Wait=$Wait)
-Start-Sleep $Wait
+
+Start-Sleep `$InitWait
 [bool]`$bCheck = `$true
 do
 {
-    `$running = Get-Process | Where-Object { $_.MainWindowTitle -like "$sDisplayname"}
-    Start-Sleep 1
+    `$running = Get-Process | Where-Object { `$_.MainWindowTitle -like "$sDisplayname"}
+    Start-Sleep `$Wait
     if ((`$bCheck)  -and (`$running))
     {
         Write-Output "$sDisplayname detected"
         `$bCheck = `$false
     }
-    
+
 }
 while (`$running)
 
@@ -80,16 +81,16 @@ while (`$running)
 } else {
     Out-File -FilePath $sScript -Append -InputObject @"
 Write-Host -NoNewLine 'Press space after game exit...';
-do 
+do
 {
     `$key = [Console]::ReadKey($true)
     `$value = `$key.KeyChar
 }
 while (`$value -notmatch ' ')
-"@   
+"@
 }
 
-Out-File -FilePath $sScript -Append -InputObject "Write-Output 'EXiting...'"
+Out-File -FilePath $sScript -Append -InputObject "Write-Output 'Exiting...'"
 
 
 if (!$NoExe)
