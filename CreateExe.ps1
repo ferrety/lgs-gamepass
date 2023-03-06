@@ -20,7 +20,7 @@
 #  Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 
 
-param([string]$Search, [switch]$NoAutoclose, [switch]$NoExe, [Double]$InitWait = 30.0, [Double]$Wait = 1.0)
+param([string]$Search, [switch]$NoAutoclose, [switch]$NoExe, [switch]$y=$False, [Double]$InitWait = 30.0, [Double]$Wait = 1.0)
 
 $oPackage = Get-AppxPackage *$Search*
 
@@ -66,14 +66,15 @@ $sScript = $sName+".ps1"
 $sExe = $sName+".exe"
 
 Write-Output "Creating launcher for '$sDisplayName'"
-do
+if (!$y)
 {
-$continue = Read-Host "Continue? (Y/n)"
-} while  (!"YNny".contains("$continue"))
-if ($continue -eq "n") {
-    exit
+    do {
+    $continue = Read-Host "Continue? (Y/n)"
+    } while  (!"YNny".contains("$continue"))
+    if ($continue -eq "n") {
+        exit
+    }
 }
-
 Out-File -FilePath $sScript -InputObject @"
 param([Double]`$InitWait = $InitWait, [Double]`$Wait=$Wait)
 Write-Output "Launching  $sDisplayname"
