@@ -20,8 +20,7 @@
 #  Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 
 
-param([string]$Search, [switch]$NoAutoclose, [switch]$NoExe, [switch]$y=$False, [Double]$InitWait = 30.0, [Double]$Wait = 1.0)
-
+param([string]$Search, [switch]$Autoclose=$false, [switch]$NoExe, [switch]$y=$False, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null)
 $oPackage = Get-AppxPackage *$Search*
 
 # The publisher name is typically included with the install location
@@ -32,8 +31,8 @@ if (!$oPackage -and !$oPackage -is [array]){
 # Finally try with publisher displayname
 # TODO: Use Package.Publisher, needs converting name to publisher id
 if (!$oPackage -and !$oPackage -is [array]){
-    $p =Get-AppxPackage  -ErrorAction SilentlyContinue  | Get-AppxPackageManifest -ErrorAction SilentlyContinue   | Where-object { $_.Package.Properties.PublisherDisplayName -like "Focus*"}
-    $oPackage=Get-AppxPackage -Name $p.Package.Identity.Name
+    $p = Get-AppxPackage  -ErrorAction SilentlyContinue  | Get-AppxPackageManifest -ErrorAction SilentlyContinue   | Where-object { $_.Package.Properties.PublisherDisplayName -like "*$Search*"}
+    $oPackage = Get-AppxPackage -Name $p.Package.Identity.Name
 }
 
 
@@ -56,7 +55,12 @@ if (!$oPackage)
 $oManifest = Get-AppPackageManifest  $oPackage
 
 $appId = $oManifest.Package.Applications.Application.id
+
+if ($Name) {
+    $sDisplayName = $Name
+} else {
 $sDisplayName = $oManifest.Package.Properties.DisplayName
+}
 
 $FamilyName = $oPackage.PackageFamilyName
 
@@ -65,7 +69,15 @@ $sName = $sDisplayName.replace(" ", "")
 $sScript = $sName+".ps1"
 $sExe = $sName+".exe"
 
+$Titles = @($sName,$sDisplayName) -join ("|")
+
+$Template = Get-Content "LauncherTemplate.ps1" -Raw
+
+$Launcher = $template -replace "%%InitWait%%", $InitWait -replace "%%Wait%%", $Wait -replace  "%%DisplayName%%", $sDisplayName `
+-replace "%%Titles%%", $Titles -replace "%%Command%%", $sCommand -replace "%%Autoclose%%", $Autoclose
+
 Write-Output "Creating launcher for '$sDisplayName'"
+
 if (!$y)
 {
     do {
@@ -75,53 +87,27 @@ if (!$y)
         exit
     }
 }
-Out-File -FilePath $sScript -InputObject @"
-param([Double]`$InitWait = $InitWait, [Double]`$Wait=$Wait)
-Write-Output "Launching  $sDisplayname"
-$sCommand
-"@
-
-if (!$NoAutoclose)
-{
-    Out-File -FilePath $sScript -Append -InputObject @"
 
 
-Start-Sleep `$InitWait
-[bool]`$bCheck = `$true
-do
-{
-    `$running = Get-Process | Where-Object { `$_.MainWindowTitle -like "$sDisplayname"}
-    Start-Sleep `$Wait
-    if ((`$bCheck)  -and (`$running))
-    {
-        Write-Output "$sDisplayname detected"
-        `$bCheck = `$false
-    }
-
-}
-while (`$running)
-
-"@
-} else {
-    Out-File -FilePath $sScript -Append -InputObject @"
-Write-Host -NoNewLine 'Press space after game exit...';
-do
-{
-    `$key = [Console]::ReadKey($true)
-    `$value = `$key.KeyChar
-}
-while (`$value -notmatch ' ')
-"@
+try {
+    $Launcher | Out-File -FilePath $sScript
+} catch {
+    Write-host -ForegroundColor Red "could not create launcher $sScript"
+    exit
 }
 
-Out-File -FilePath $sScript -Append -InputObject "Write-Output 'Exiting...'"
 
 if (!$NoExe)
 {
+    try {
     Invoke-ps2exe .\$sScript .\$sExe
+    } catch {
+        Write-host -ForegroundColor Red "Cound not create launcher $sExe"
+        exit
+    }
+    Write-Output "Created $sExe with launch command"
 
-    Write-Output "Created $sExe with command"
 } else {
-    Write-Output "Would Create $sExe with command"
+    Write-Output "Would Create $sExe with launch command"
 }
 Write-Output "$sCommand"
