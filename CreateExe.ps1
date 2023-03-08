@@ -123,8 +123,10 @@ if (!$Monitor) {
 } else {
     Write-Output "Creating monitoring for '$sDisplayName'"
 }
-Write-Output "Publisher "+ (Get-AppPackageManifest  $oPackage).Package.Properties.PublisherDisplayName
-Write-Output "Install Location  $oPackage.InstallLocation"
+$pub = $oManifest.Package.Properties.PublisherDisplayName
+$inst = $oPackage.InstallLocation
+Write-Output "Publisher:        $pub"
+Write-Output "Install Location: $inst"
 
 if (!$y)
 {
