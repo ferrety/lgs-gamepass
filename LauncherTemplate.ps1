@@ -1,4 +1,4 @@
-param([Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [switch]$AutoClose=%%AutoClose%%)
+param([Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%)
 
 function exit_launcher() {
     if ($AutoClose) {

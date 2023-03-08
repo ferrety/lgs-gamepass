@@ -20,7 +20,13 @@
 #  Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 
 
-param([string]$Search, [switch]$Autoclose=$false, [switch]$NoExe, [switch]$y=$False, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null)
+param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null)
+
+function as_bool_string() {
+param([bool]$value)
+$ret= if ($value) { '$true' } else { '$false' }
+return $ret
+}
 $oPackage = Get-AppxPackage *$Search*
 
 # The publisher name is typically included with the install location
@@ -73,10 +79,16 @@ $Titles = @($sName,$sDisplayName) -join ("|")
 
 $Template = Get-Content "LauncherTemplate.ps1" -Raw
 
-$Launcher = $template -replace "%%InitWait%%", $InitWait -replace "%%Wait%%", $Wait -replace  "%%DisplayName%%", $sDisplayName `
--replace "%%Titles%%", $Titles -replace "%%Command%%", $sCommand -replace "%%Autoclose%%", $Autoclose
+$sMonitor = as_bool_string $Monitor
+$sAutoClose = as_bool_string $Autoclose
 
-Write-Output "Creating launcher for '$sDisplayName'"
+if (!$Monitor) {
+    Write-Output "Creating launcher for '$sDisplayName'"
+} else {
+    Write-Output "Creating monitoring for '$sDisplayName'"
+}
+Write-Output "Publisher "+ (Get-AppPackageManifest  $oPackage).Package.Properties.PublisherDisplayName
+Write-Output "Install Location  $oPackage.InstallLocation"
 
 if (!$y)
 {
@@ -88,6 +100,10 @@ if (!$y)
     }
 }
 
+$Launcher = $template -replace "%%InitWait%%", $InitWait -replace "%%Wait%%", $Wait -replace  "%%DisplayName%%", $sDisplayName `
+-replace "%%Titles%%", $Titles -replace "%%Command%%", $sCommand -replace "%%Autoclose%%", $sAutoClose `
+-replace "%%Monitor%%", $sMonitor  `
+-replace "%%AutoClose%%", $Autoclose
 
 try {
     $Launcher | Out-File -FilePath $sScript
@@ -102,12 +118,12 @@ if (!$NoExe)
     try {
     Invoke-ps2exe .\$sScript .\$sExe
     } catch {
-        Write-host -ForegroundColor Red "Cound not create launcher $sExe"
+        Write-host -ForegroundColor Red "Could not create launcher $sExe"
         exit
     }
-    Write-Output "Created $sExe with launch command"
+    Write-Host -NoNewline "Created $sExe "
 
 } else {
-    Write-Output "Would Create $sExe with launch command"
+    Write-Host -NoNewline "Would Create $sExe "
 }
 Write-Output "$sCommand"
