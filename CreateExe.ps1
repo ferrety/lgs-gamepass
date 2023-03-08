@@ -21,6 +21,35 @@
 
 
 param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null)
+function select_from_array() {
+    [CmdletBinding()]
+    param (
+        $prompt,
+        $items,
+        $controls="q",
+        $help="q - quit"
+        )
+
+    $n=$null
+    $items | Format-Table | Out-Host
+
+    write-host "? for commands"
+    do {
+        if ($items.Length -lt 10) {
+        write-Host -NoNewLine "${prompt}:"
+        $select = [Console]::ReadKey().KeyChar
+        write-Host ""
+        } else {
+            $select = Read-Host -Prompt $prompt
+            $select = $select -replace '\s',''
+    }
+    if ($select -eq "?") {
+        Write-host $help
+        continue
+    }
+} while (!($controls.contains($select) -or ([System.Int32]::TryParse($select, [ref]$n) -and $n -le $items.Length -and $n -gt 0)))
+return $select
+}
 
 function as_bool_string() {
 param([bool]$value)
@@ -51,14 +80,21 @@ if (!$oPackage)
 {
     Write-Host -ForegroundColor Red "Multiple packages found for search '$Search'"
     $a = @()
+
+    $i=0
     foreach ($p in $oPackage)
     {
-        $a+=[PSCustomObject]@{ "Package Name" = $p.name; "Display Name" = (Get-AppPackageManifest  $p).Package.Properties.DisplayName}
+        $i++
+        $a+=[PSCustomObject]@{ "#" = $i; "Package Name" = $p.name; "Display Name" = (Get-AppPackageManifest  $p).Package.Properties.DisplayName}
     }
-    $a |Format-Table -AutoSize |Out-String
-    Exit
+    $select=select_from_array "Select one" $a
+    if ($select -eq "q"){
+        Exit
+    }
+    $n=([int][string]$select)-1
+    $oPackage = $oPackage[$n]
 }
-$oManifest = Get-AppPackageManifest  $oPackage
+$oManifest = Get-AppPackageManifest $oPackage
 
 $appId = $oManifest.Package.Applications.Application.id
 
@@ -124,6 +160,10 @@ if (!$NoExe)
     Write-Host -NoNewline "Created $sExe "
 
 } else {
-    Write-Host -NoNewline "Would Create $sExe "
+    Write-Host -NoNewline "Would Create $sScript "
 }
-Write-Output "$sCommand"
+if ($Monitor) {
+    Write-Output "to monitor $sDisplayName"
+} else {
+Write-Output "with launch command $sCommand"
+}

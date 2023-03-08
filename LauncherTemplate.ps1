@@ -1,6 +1,7 @@
 param([Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%)
 
 function exit_launcher() {
+    param([bool]$AutoClose)
     if ($AutoClose) {
         Write-Host -NoNewLine 'Exiting'
         for($i=0;$i -lt 5;$i++){
@@ -55,7 +56,7 @@ do {
                 if ( [System.Int32]::TryParse($select, [ref]$n) -and $n -le $running.Length -and $n -gt 0) {
                        $process = $running[[int]$n-1]
                 } else {
-                    exit_launcher
+                    exit_launcher $AutoClose
                 }
             }
 
@@ -66,7 +67,7 @@ do {
             Write-Output "$DisplayName detected as '$($process.Name): $($process.MainWindowTitle)'"
         } else {
             Write-host -ForegroundColor Red "Could not locate '$DisplayName'"
-            exit_launcher
+            exit_launcher $AutoClose
         }
 
     }
