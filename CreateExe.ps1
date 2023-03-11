@@ -119,10 +119,11 @@ $sMonitor = as_bool_string $Monitor
 $sAutoClose = as_bool_string $Autoclose
 
 if (!$Monitor) {
-    Write-Output "Creating launcher for '$sDisplayName'"
+    Write-host -NoNewline "Creating launcher "
 } else {
-    Write-Output "Creating monitoring for '$sDisplayName'"
+    Write-host -NoNewline "Creating monitoring "
 }
+Write-Host "for '$sDisplayName'"
 $pub = $oManifest.Package.Properties.PublisherDisplayName
 $inst = $oPackage.InstallLocation
 Write-Output "Publisher:        $pub"

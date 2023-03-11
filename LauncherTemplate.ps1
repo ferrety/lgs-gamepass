@@ -15,8 +15,36 @@ function exit_launcher() {
     }
 }
 
-$DisplayName = "%%DisplayName%%"
-$Titles = "%%Titles%%"
+function select_from_array() {
+    [CmdletBinding()]
+    param (
+        $prompt,
+        $items,
+        $controls="q",
+        $help="q - quit"
+        )
+
+    $n=$null
+    $items | Format-Table | Out-Host
+
+    write-host "? for commands"
+    do {
+        if ($items.Length -lt 10) {
+        write-Host -NoNewLine "${prompt}:"
+        $select = [Console]::ReadKey().KeyChar
+        write-Host ""
+        } else {
+            $select = Read-Host -Prompt $prompt
+            $select = $select -replace '\s',''
+    }
+    if ($select -eq "?") {
+        Write-host $help
+        continue
+    }
+} while (!($controls.contains($select) -or ([System.Int32]::TryParse($select, [ref]$n) -and $n -le $items.Length -and $n -gt 0)))
+return $select
+}
+
 
 if (!$Monitor) {
     Write-Output "Launching $DisplayName"
@@ -42,21 +70,18 @@ do {
                 $a+=[PSCustomObject]@{ "`#" = $i+1; "Name" = $p.Name; "Window Title"=$p.MainWindowTitle; "Path" = $p.Path;}
             }
             if (!$process) {
-                Write-Host -ForegroundColor Red -NoNewLine "`n`Multiple match found for '$DisplayName'"
-                $a |Format-Table -AutoSize |Out-String
-                write-Host -NoNewLine "Select one, re-check with r or exit with any other key: "
-                $select = [Console]::ReadKey().KeyChar
-                write-Host ""
+                Write-Host -ForegroundColor Red -NoNewLine "`n`Multiple process matches found for '$DisplayName'"
+                $select = select_from_array "Select one" $a "qr" "q -quit`nr - recheck"
+
                 if ($select -eq "r") {
                     [bool]$re_check = $true
                     Start-Sleep $InitWait
                     continue
-                }
-                $n = $null
-                if ( [System.Int32]::TryParse($select, [ref]$n) -and $n -le $running.Length -and $n -gt 0) {
-                       $process = $running[[int]$n-1]
-                } else {
+                } elif ($select -eq "q") {
                     exit_launcher $AutoClose
+                } else {
+                    $n=([int][string]$select)-1
+                    $process = $running[[int]$n]
                 }
             }
 
