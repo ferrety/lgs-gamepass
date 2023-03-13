@@ -108,8 +108,16 @@ $FamilyName = $oPackage.PackageFamilyName
 
 $sCommand = "explorer.exe shell:appsFolder\$FamilyName!$appId"
 $sName = $sDisplayName.replace(" ", "")
-$sScript = $sName+".ps1"
-$sExe = $sName+".exe"
+
+$sFileName = $sName
+foreach($c in [System.IO.Path]::GetInvalidFileNameChars()) {
+    $sFileName  = $sFileName.replace([string]$c,"-")
+    #$sFileName  = $sFileName -replace [regex]::Escape($c)
+}
+
+Write-Host $sFileName
+$sScript = $sFileName+".ps1"
+$sExe = $sFileName+".exe"
 
 $Titles = @($sName,$sDisplayName) -join ("|")
 
