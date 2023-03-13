@@ -1,4 +1,4 @@
-param([Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%)
+param([Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%, $DisplayName = "%%DisplayName%%", $Titles = "%%Titles%%", $Command = "%%Command%%")
 
 function exit_launcher() {
     param([bool]$AutoClose)
@@ -11,12 +11,11 @@ function exit_launcher() {
     } else {
         Write-Host -NoNewLine 'Press any key to exit';
         $key = [Console]::ReadKey($true)
-        exit
     }
+    exit
 }
 
 function select_from_array() {
-    [CmdletBinding()]
     param (
         $prompt,
         $items,
@@ -48,7 +47,7 @@ return $select
 
 if (!$Monitor) {
     Write-Output "Launching $DisplayName"
-    %%Command%%
+    $Command
 } else {
     Write-Output "Monitoring $DisplayName"
 }
@@ -77,7 +76,7 @@ do {
                     [bool]$re_check = $true
                     Start-Sleep $InitWait
                     continue
-                } elif ($select -eq "q") {
+                } elseif ($select -eq "q") {
                     exit_launcher $AutoClose
                 } else {
                     $n=([int][string]$select)-1
