@@ -112,7 +112,7 @@ $sName = $sDisplayName.replace(" ", "")
 $sFileName = $sName
 foreach($c in [System.IO.Path]::GetInvalidFileNameChars()) {
     $sFileName  = $sFileName.replace([string]$c,"-")
-    #$sFileName  = $sFileName -replace [regex]::Escape($c)
+
 }
 
 Write-Host $sFileName

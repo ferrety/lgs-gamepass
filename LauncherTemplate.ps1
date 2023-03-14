@@ -44,6 +44,7 @@ function select_from_array() {
 return $select
 }
 
+[System.Console]::Title = "LGSMonitor $DisplayName"
 
 if (!$Monitor) {
     Write-Output "Launching $DisplayName"
@@ -57,7 +58,7 @@ $process = $null
 do {
     [bool]$re_check = $false
     if (!$process -or $re_check) {
-        $running = Get-Process | Where-Object { $_.MainWindowTitle -match $Titles}
+        $running = Get-Process | Where-Object { $_.MainWindowTitle -match $Titles -and -not ($_.MainWindowTitle -match "LGSMonitor") }
         if ($running -is [array]) {
             $a = @()
             for ($i = 0; $i -lt $running.Length; $i++) {
@@ -88,7 +89,7 @@ do {
             $process = $running
         }
         if($process) {
-            Write-Output "$DisplayName detected as '$($process.Name): $($process.MainWindowTitle)'"
+            Write-Output "$DisplayName detected as '$($process.MainWindowTitle.trim()): $($process.Name).exe'"
         } else {
             Write-host -ForegroundColor Red "Could not locate '$DisplayName'"
             exit_launcher $AutoClose
