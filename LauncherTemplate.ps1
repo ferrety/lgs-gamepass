@@ -1,4 +1,4 @@
-param([Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%, $DisplayName = "%%DisplayName%%", $Titles = "%%Titles%%", $Command = "%%Command%%")
+param([Alias("w")][switch]$wide, [Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%, $DisplayName = "%%DisplayName%%", $Titles = "%%Titles%%", $Command = "%%Command%%")
 
 function exit_launcher() {
     param([bool]$AutoClose)
@@ -44,7 +44,7 @@ function select_from_array() {
 return $select
 }
 
-[System.Console]::Title = "LGSMonitor $DisplayName"
+$mypid = [System.Diagnostics.Process]::GetCurrentProcess().Id
 
 if (!$Monitor) {
     Write-Output "Launching $DisplayName"
@@ -58,7 +58,11 @@ $process = $null
 do {
     [bool]$re_check = $false
     if (!$process -or $re_check) {
-        $running = Get-Process | Where-Object { $_.MainWindowTitle -match $Titles -and -not ($_.MainWindowTitle -match "LGSMonitor") }
+        if ($wide) {
+            $running = Get-Process | Where-Object { $_.MainWindowTitle -match $Titles -and -not ($_.id -eq $mypid) }    
+        } else {
+            $running = Get-Process | Where-Object { ($_.ProcessName -match $Titles -or $_.Path -match $Titles) -and -not ($_.id -eq $mypid) }
+        }
         if ($running -is [array]) {
             $a = @()
             for ($i = 0; $i -lt $running.Length; $i++) {
@@ -89,7 +93,7 @@ do {
             $process = $running
         }
         if($process) {
-            Write-Output "$DisplayName detected as '$($process.MainWindowTitle.trim()): $($process.Name).exe'"
+            Write-Output "$DisplayName detected as '$($process.MainWindowTitle.trim())': $($process.Name).exe"
         } else {
             Write-host -ForegroundColor Red "Could not locate '$DisplayName'"
             exit_launcher $AutoClose
