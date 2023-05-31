@@ -48,7 +48,7 @@ $mypid = [System.Diagnostics.Process]::GetCurrentProcess().Id
 
 if (!$Monitor) {
     Write-Output "Launching $DisplayName"
-    $Command
+    Invoke-Expression $Command
 } else {
     Write-Output "Monitoring $DisplayName"
 }

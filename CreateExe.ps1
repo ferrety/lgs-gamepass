@@ -135,7 +135,7 @@ Write-Host "for '$sDisplayName'"
 $pub = $oManifest.Package.Properties.PublisherDisplayName
 $inst = $oPackage.InstallLocation
 Write-Output "Publisher:        $pub"
-Write-Output "Install Location: $inst"
+Write-Output "Package location: $inst"
 
 if (!$y)
 {
