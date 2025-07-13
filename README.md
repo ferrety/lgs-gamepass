@@ -1,12 +1,12 @@
-# Simplistic LGS detection for GamePass games
-Powershell script to create a Game Pass game  launcher that can be used for  LGS detection
+# CORSAIR iCUE and Logitech LGS detection for GamePass games
+Powershell script to create a Game Pass game  launcher that can be used to detect if game is running in iCUE and LGS (an similar tools)
 
 ## Usage:
 ```
 ./CreateExe.ps1 <part of game name>
 ```
-
-When creating LGS profile you need to select the "Lock profile while game is running" -option. When you finish playing, you need to close the launcher.
+### LGS
+When creating LGS profile you need to select the "Lock profile while game is running" -option.
 
 
 ## Requirements
@@ -27,4 +27,4 @@ Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 ./CreateExe.ps1 Doom*Eter
 ```
   Create DOOMEternal.exe that can be  used launch Doom Eternal
-  The executable can then be used in LGS to detect if Doom Eternal is running
+  The executable can then be used to launch game pass Doom Eternal and and detect if Doom Eternal is running
