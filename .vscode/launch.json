@@ -35,7 +35,6 @@
             "request": "launch",
             "script": "${file}",
             "cwd": "${workspaceFolder}",
-            "args": ["-initwait 10"]
-        }
+            "args": ["${input:args}"],
     ]
 }

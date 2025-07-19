@@ -20,7 +20,7 @@
 #  Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 
 
-param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null, [string]$OutputDir = ".\launchers", [string]$Title=$null)
+param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Alias("w")][switch]$Wide, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null, [string]$OutputDir = ".\launchers", [string]$Title=$null)
 function select_from_array() {
     [CmdletBinding()]
     param (
@@ -129,6 +129,7 @@ $Template = Get-Content "LauncherTemplate.ps1" -Raw
 
 $sMonitor = as_bool_string $Monitor
 $sAutoClose = as_bool_string $Autoclose
+$sWide = as_bool_string $Wide
 
 if (!$Monitor) {
     Write-host -NoNewline "Creating launcher "
@@ -167,7 +168,8 @@ if (!$y)
 
 $Launcher = $template -replace "%%InitWait%%", $InitWait -replace "%%Wait%%", $Wait -replace  "%%DisplayName%%", $sDisplayName `
 -replace "%%Titles%%", $Titles -replace "%%Command%%", $sCommand -replace "%%Autoclose%%", $sAutoClose `
--replace "%%Monitor%%", $sMonitor  `
+-replace "%%Wide%%", $sWide `
+-replace "%%Monitor%%", $sMonitor `
 -replace "%%AutoClose%%", $Autoclose
 
 try {

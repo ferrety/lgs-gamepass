@@ -1,4 +1,4 @@
-param([string]$exe=$null, [Alias("w")][switch]$wide, [Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%, $DisplayName = "%%DisplayName%%", $Titles = "%%Titles%%", $Command = "%%Command%%")
+param([string]$exe=$null, [Alias("w")][switch]$Wide = %%Wide%%, [Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%, $DisplayName = "%%DisplayName%%", $Titles = "%%Titles%%", $Command = "%%Command%%")
 
 function exit_launcher() {
     param([bool]$AutoClose)
@@ -55,17 +55,19 @@ if (!$Monitor) {
 Start-Sleep $InitWait
 
 $process = $null
+Write-Output "Checking for running processes matching '$DisplayName'..."
 do {
     [bool]$re_check = $false
     if (!$process -or $re_check) {
         if ($exe) {
             $running = Get-Process | Where-Object { $_.name -like $exe -and -not ($_.id -eq $mypid) }
-        }
-        elseif ($wide) {
-            $running = Get-Process | Where-Object { $_.MainWindowTitle -match $Titles -and -not ($_.id -eq $mypid) }    
         } else {
             $running = Get-Process | Where-Object { ($_.ProcessName -match $Titles -or $_.Path -match $Titles) -and -not ($_.id -eq $mypid) }
+            if (!$running -and $Wide) {
+                $running = Get-Process | Where-Object { $_.MainWindowTitle -match $Titles -and -not ($_.id -eq $mypid) }
+            }
         }
+
         if ($running -is [array]) {
             $a = @()
             for ($i = 0; $i -lt $running.Length; $i++) {
