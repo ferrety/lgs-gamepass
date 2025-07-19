@@ -20,7 +20,7 @@
 #  Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 
 
-param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null, [string]$OutputDir = ".")
+param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null, [string]$OutputDir = ".\launchers", [string]$Title=$null)
 function select_from_array() {
     [CmdletBinding()]
     param (
@@ -119,7 +119,11 @@ Write-Host $sFileName
 $sScript = Join-Path $OutputDir "$sFileName.ps1"
 $sExe = Join-Path $OutputDir "$sFileName.exe"
 
-$Titles = @($sName,$sDisplayName) -join ("|")
+$TitlesList = @($sName, $sDisplayName)
+if ($Title) {
+    $TitlesList += $Title
+}
+$Titles = $TitlesList -join "|"
 
 $Template = Get-Content "LauncherTemplate.ps1" -Raw
 
@@ -155,7 +159,8 @@ if (!$y)
     do {
     $continue = Read-Host "Continue? (Y/n)"
     } while  (!"YNny".contains("$continue"))
-    if ($continue -eq "n") {
+    if (
+        $continue -eq "n") {
         exit
     }
 }
@@ -167,6 +172,7 @@ $Launcher = $template -replace "%%InitWait%%", $InitWait -replace "%%Wait%%", $W
 
 try {
     $Launcher | Out-File -FilePath $sScript
+    Write-Host -NoNewline "Created $sScript "
 } catch {
     Write-host -ForegroundColor Red "could not create launcher $sScript"
     exit
@@ -183,9 +189,8 @@ if (!$NoExe)
     }
     Write-Host -NoNewline "Created $sExe "
 
-} else {
-    Write-Host -NoNewline "Would Create $sScript "
 }
+
 if ($Monitor) {
     Write-Output "to monitor $sDisplayName"
 } else {
