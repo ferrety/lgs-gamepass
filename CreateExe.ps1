@@ -20,7 +20,7 @@
 #  Set-ExecutionPolicy  -ExecutionPolicy Unrestricted -Scope Process
 
 
-param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null)
+param([string]$Search, [Alias("ac")][switch]$Autoclose, [Alias("m")][switch]$Monitor, [switch]$NoExe, [switch]$y, [Double]$InitWait = 30.0, [Double]$Wait = 1.0, [string]$Template = "LauncherTemplate.ps1", [string]$Name=$null, [string]$OutputDir = ".")
 function select_from_array() {
     [CmdletBinding()]
     param (
@@ -116,8 +116,8 @@ foreach($c in [System.IO.Path]::GetInvalidFileNameChars()) {
 }
 
 Write-Host $sFileName
-$sScript = $sFileName+".ps1"
-$sExe = $sFileName+".exe"
+$sScript = Join-Path $OutputDir "$sFileName.ps1"
+$sExe = Join-Path $OutputDir "$sFileName.exe"
 
 $Titles = @($sName,$sDisplayName) -join ("|")
 
@@ -134,8 +134,21 @@ if (!$Monitor) {
 Write-Host "for '$sDisplayName'"
 $pub = $oManifest.Package.Properties.PublisherDisplayName
 $inst = $oPackage.InstallLocation
+
+# Ensure output directory exists
+if (-not (Test-Path $OutputDir)) {
+    try {
+        New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
+        Write-Host -ForegroundColor Green "Created output directory: $OutputDir"
+    } catch {
+        Write-Host -ForegroundColor Red "Could not create output directory: $OutputDir"
+        exit
+    }
+}
+
 Write-Output "Publisher:        $pub"
 Write-Output "Package location: $inst"
+Write-Output "Output directory: $(Resolve-Path $OutputDir)"
 
 if (!$y)
 {
@@ -163,7 +176,7 @@ try {
 if (!$NoExe)
 {
     try {
-    Invoke-ps2exe .\$sScript .\$sExe
+    Invoke-ps2exe $sScript $sExe
     } catch {
         Write-host -ForegroundColor Red "Could not create launcher $sExe"
         exit

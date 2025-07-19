@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "gameSearch",
+            "type": "promptString",
+            "description": "Enter the game name to search for:",
+            "default": "mech*clan"
+        },
+        {
+            "id": "args",
+            "type": "promptString",
+            "description": "Enter additional arguments (e.g., -ac -y -m):",
+            "default": "-ac -y"
+        }
+
+    ],
+    "configurations": [
+
+        {
+            "name": "CreateExe",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${workspaceFolder}/CreateExe.ps1",
+            "cwd": "${workspaceFolder}",
+            "args": ["${input:gameSearch}", "${input:args}"],
+            "createTemporaryIntegratedConsole": false
+        },
+        {
+            "name": "Current File",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${workspaceFolder}",
+            "args": ["-initwait 10"]
+        }
+    ]
+}
