@@ -159,6 +159,14 @@ Write-Output "Publisher:        $pub"
 Write-Output "Package location: $inst"
 Write-Output "Output directory: $(Resolve-Path $OutputDir)"
 
+$paramPairs = $PSBoundParameters.GetEnumerator() | ForEach-Object {
+    "$($_.Key)=$($_.Value)"
+}
+$paramSummary = $paramPairs -join ', '
+
+Write-Host "Passed parameters: $paramSummary"
+
+
 if (!$y)
 {
     do {
@@ -170,13 +178,15 @@ if (!$y)
     }
 }
 
-$Launcher = $template -replace "%%InitWait%%", $InitWait -replace "%%Wait%%", $Wait -replace  "%%DisplayName%%", $sDisplayName `
+$Launcher = $template -replace "%%paramSummary%%", $paramSummary -replace "%%InitWait%%", $InitWait -replace "%%Wait%%", $Wait -replace  "%%DisplayName%%", $sDisplayName `
 -replace "%%Titles%%", $Titles -replace "%%Command%%", $sCommand -replace "%%Autoclose%%", $sAutoClose `
 -replace "%%Wide%%", $sWide `
 -replace "%%Monitor%%", $sMonitor `
 -replace "%%AutoClose%%", $Autoclose
 
+
 try {
+    
     $Launcher | Out-File -FilePath $sScript
     Write-Host -NoNewline "Created $sScript "
 } catch {

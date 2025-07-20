@@ -1,4 +1,5 @@
 param([string]$exe=$null, [Alias("w")][switch]$Wide = %%Wide%%, [Double]$InitWait = %%InitWait%%, [Double]$Wait=%%Wait%%, [Alias("m")][switch]$Monitor=%%Monitor%%, [Alias("ac")][switch]$AutoClose=%%AutoClose%%, $DisplayName = "%%DisplayName%%", $Titles = "%%Titles%%", $Command = "%%Command%%")
+# Original parameters: %%paramSummary%%
 
 function exit_launcher() {
     param([bool]$AutoClose)
