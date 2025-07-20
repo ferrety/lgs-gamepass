@@ -123,6 +123,10 @@ $TitlesList = @($sName, $sDisplayName)
 if ($Title) {
     $TitlesList += $Title
 }
+if ($Wide) {
+    $TitlesList += $Search    
+}
+
 $Titles = $TitlesList -join "|"
 
 $Template = Get-Content "LauncherTemplate.ps1" -Raw
